@@ -1,0 +1,38 @@
+@startuml
+title Диаграмма контейнеров — Онлайн-заявка на кредит
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(customer, "Клиент", "Новый или существующий пользователь")
+
+System_Boundary(site_boundary, "Сайт банка") {
+  Container(site_ui, "Web-интерфейс", "React", "Позволяет клиенту подать заявку на кредит")
+  Container(site_backend, "Сервер сайта", "PHP / Node.js", "Обрабатывает ввод, передаёт заявку в кредитный API")
+}
+
+System_Boundary(credit_boundary, "Кредитный модуль") {
+  Container(credit_api, "Кредитный API", "Java / Python", "Обрабатывает заявки на кредит")
+  Container(scoring_connector, "Интеграция со скорингом", "REST client", "Запрашивает скоринг и БКИ")
+  Container(queue, "Очередь заявок (Kafka)", "Kafka", "Передаёт заявки в АБС и Кредитный конвейер")
+}
+
+System(abs, "АБС", "Oracle / Delphi", "Получает и хранит заявки")
+System(cc, "Кредитный конвейер", "Camunda BPM", "Обрабатывает заявки сотрудниками")
+System(scoring, "Скоринг-система", "Python / Flask", "Рассчитывает рейтинг клиента")
+System(bki, "Бюро кредитных историй", "Внешний сервис", "История по клиенту")
+System(sms, "СМС-шлюз", "HTTP API", "Оповещает клиента")
+
+Rel(customer, site_ui, "Вводит заявку")
+Rel(site_ui, site_backend, "POST заявки")
+Rel(site_backend, credit_api, "Передаёт заявку")
+
+Rel(credit_api, scoring_connector, "Вызывает скоринг и БКИ")
+Rel(scoring_connector, scoring, "Запрос скоринга", "REST")
+Rel(scoring, bki, "Запрос истории", "REST")
+
+Rel(credit_api, queue, "Публикует заявку", "Kafka")
+Rel(queue, abs, "Передаёт заявку")
+Rel(queue, cc, "Передаёт заявку")
+Rel(credit_api, sms, "Отправляет уведомление", "HTTP API")
+
+@enduml

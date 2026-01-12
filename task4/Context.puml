@@ -1,0 +1,20 @@
+@startuml
+title Контекстная диаграмма — Передача ставок в кол-центр
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+Person(agent, "Сотрудник кол-центра", "Отвечает на звонки клиентов, предоставляет ставки")
+Person(partner_agent, "Сотрудник партнёрского кол-центра", "Обрабатывает звонки клиентов вне банка")
+
+System(crm, "Система кол-центра (CRM)", "Рабочее место операторов банка")
+System(abs, "АБС", "Автоматизированная банковская система — источник ставок")
+System(exporter, "Сервис выгрузки ставок", "Формирует файл ставок для партнёров")
+System(partner_system, "Система партнёрского кол-центра", "Внешняя система партнёра")
+
+Rel(agent, crm, "Работает через")
+Rel(crm, abs, "Запрашивает ставки", "REST API")
+Rel(exporter, abs, "Получает ставки", "SQL/PLSQL")
+Rel(exporter, partner_system, "Передаёт файл ставок", "CSV/XLSX по SFTP")
+Rel(partner_agent, partner_system, "Получает ставки из файла")
+
+@enduml

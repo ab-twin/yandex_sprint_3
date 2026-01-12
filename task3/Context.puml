@@ -1,0 +1,28 @@
+@startuml
+title Контекстная диаграмма - Открытие депозита (MVP)
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+Person(customer, "Клиент", "Физическое лицо, использующее интернет-банк или сайт")
+Person(backoffice, "Сотрудник бэк-офиса", "Обрабатывает заявки вручную в АБС")
+Person(callcenterManager, "Сотрудник колл-центра", "Обрабатывает заявки вручную в АБС")
+
+System(web, "Сайт", "Канал подачи заявок на депозит для новых клиентов")
+System(ib, "Интернет-банк", "Канал подачи заявок на депозит для существующих клиентов")
+System(callcenter, "Система кол-центра", "Обрабатывает заявки с сайта")
+System(rates, "Хранилище ставок", "Обеспечивает доступ к актуальным и персонализированным ставкам")
+System(kafka, "Очередь Kafka", "Асинхронная передача заявок на обработку")
+System(abs, "АБС", "Основная банковская система учёта операций")
+System(sms, "СМС-шлюз", "Уведомляет клиентов о результатах")
+
+Rel(customer, web, "Оставляет заявку", "HTTPS")
+Rel(web, callcenter, "Передаёт заявку", "REST/HTTPS")
+Rel(customer, ib, "Работает с депозитами", "HTTPS")
+Rel(ib, rates, "Запрашивает ставки", "SQL/REST")
+Rel(ib, kafka, "Отправляет заявку", "Kafka event")
+Rel(kafka, backoffice, "Доставляет заявку")
+Rel(backoffice, abs, "Оформляет депозит")
+Rel(abs, sms, "Отправляет СМС", "HTTP API")
+Rel(callcenterManager, callcenter, "Обзванивает клиента")
+
+@enduml

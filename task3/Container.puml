@@ -1,0 +1,30 @@
+@startuml
+title Диаграмма контейнеров - Открытие депозитов (MVP)
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(customer, "Клиент", "Физическое лицо, использующее интернет-банк")
+
+System_Boundary(ib_boundary, "Интернет-банк") {
+  Container(ib_ui, "Веб-интерфейс", "ASP.NET MVC", "Позволяет клиенту подать заявку и увидеть ставки")
+  Container(ib_api, "API подачи заявок", ".NET / Python", "Обрабатывает данные заявок и взаимодействует с инфраструктурой")
+}
+
+System_Boundary(abs_boundary, "АБС") {
+  Container(abs_client, "Клиент", "Delphi", "Рабочее место сотрудника бэк-офиса")
+  Container(abs_db, "База данных", "Oracle", "Хранит информацию о счетах, депозитах и ставках")
+}
+
+Container(rates, "Хранилище ставок", "MS SQL / Oracle", "Предоставляет актуальные и персонализированные ставки")
+Container(kafka, "Kafka", "Event Streaming", "Асинхронная очередь заявок")
+Container(sms, "СМС-шлюз", "HTTP API", "Отправляет уведомления клиенту")
+
+Rel(customer, ib_ui, "Работает с веб-интерфейсом", "HTTPS")
+Rel(ib_ui, ib_api, "Вызывает", "REST / Internal Call")
+Rel(ib_api, rates, "Запрашивает ставки", "SQL / REST")
+Rel(ib_api, kafka, "Публикует заявку", "Kafka")
+Rel(kafka, abs_client, "Передаёт заявку на обработку", "Consumer")
+Rel(abs_client, abs_db, "Читает / пишет данные", "PL/SQL")
+Rel(abs_client, sms, "Отправляет СМС клиенту", "HTTP API")
+
+@enduml

@@ -1,0 +1,31 @@
+@startuml
+title Диаграмма контейнеров — Передача ставок в кол-центр
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(agent, "Сотрудник кол-центра")
+Person(partner_agent, "Сотрудник партнёрского кол-центра")
+
+System_Boundary(crm_boundary, "CRM кол-центра") {
+  Container(crm_ui, "CRM UI", "Web UI", "Интерфейс оператора кол-центра")
+  Container(crm_api, "CRM Backend", "Java Spring Boot", "Обрабатывает запросы и вызывает API ставок")
+}
+
+System_Boundary(abs_boundary, "АБС") {
+  Container(abs_api, "ABS API", "REST API", "Предоставляет ставки")
+  Container(abs_db, "БД ставок", "Oracle", "Хранит актуальные условия депозитов")
+}
+
+Container(exporter, "Сервис выгрузки ставок", ".NET / Python / Scheduler", "Формирует CSV/XLSX на основе данных из АБС")
+Container(partner_system, "Система партнёрского кол-центра", "Внешняя система", "Получает файл со ставками")
+
+' Связи
+Rel(agent, crm_ui, "Работает с интерфейсом")
+Rel(crm_ui, crm_api, "Запрос ставок")
+Rel(crm_api, abs_api, "Получение ставок", "REST")
+Rel(abs_api, abs_db, "Чтение данных", "SQL/PLSQL")
+Rel(exporter, abs_db, "Читает ставки", "SQL")
+Rel(exporter, partner_system, "Передаёт файл ставок", "CSV/XLSX по SFTP")
+Rel(partner_agent, partner_system, "Читает файл")
+
+@enduml
